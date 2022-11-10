@@ -59,7 +59,7 @@ Results are shown below:
 CAsT-19 (105 turns): [24, 6, 75]. 71.4% belongs to level-2.
 CAsT-19+20 (170 turns): [68, 11, 91]. 53.5% belongs to level-2.
 ```
-Since the many turns in CAsT-20 have response dependency, so the performance of this checkpoint on CAsT-20 is significantly worse than that on CAsT-19, which only has the dependency on previous queries.
+Since many turns in CAsT-20 have response dependency, so the performance of this checkpoint on CAsT-20 is significantly worse than that on CAsT-19, which only has the dependency on previous queries.
 
 The judgement file is also provided in the above checkpoint zip file. Note that we have ignored the turn whose `cur_utt_text` is the same as the `oracle_utt_text`.
 
