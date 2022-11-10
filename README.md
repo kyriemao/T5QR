@@ -4,7 +4,7 @@
 ```
 conda create -n t5qr python=3.8
 source activate t5qr
-pip install -r requirement.txt
+pip install -r requirements.txt
 ```
 
 ## Data
