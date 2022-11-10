@@ -1,0 +1,4 @@
+{"sample_id": "31_1", "cur_utt_text": "What is throat cancer?", "ctx_utts_text": [], "oracle_utt_text": "What is throat cancer?"}
+{"sample_id": "31_2", "cur_utt_text": "Is it treatable?", "ctx_utts_text": ["What is throat cancer?"], "oracle_utt_text": "Is throat cancer treatable?"}
+{"sample_id": "31_3", "cur_utt_text": "Tell me about lung cancer.", "ctx_utts_text": ["What is throat cancer?", "Is it treatable?"], "oracle_utt_text": "Tell me about lung cancer."}
+{"sample_id": "31_4", "cur_utt_text": "What are its symptoms? ", "ctx_utts_text": ["What is throat cancer?", "Is it treatable?", "Tell me about lung cancer."], "oracle_utt_text": "What are lung cancer's symptoms?"}
