@@ -48,7 +48,7 @@ You need to set the `rewriter path`, `query`, and `context` in the script, and t
 python single_rewrite.py
 ```
 
-## Checkpoints
+## Checkpoint and Human Evaluation
 We provide a T5QR checkpoint [here](https://drive.google.com/file/d/1V531-kafArfr8AuJYwvNOOqpeoKconwB/view?usp=share_link),  which was trained on the training data of [QReCC](https://github.com/apple/ml-qrecc) with 5 epochs. Note that only previous queries were used as the context.
 
 We randomly select 170 turns from CAsT-19 and CAsT-20 and perform a human evaluation on this checkpoint.
