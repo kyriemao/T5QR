@@ -48,7 +48,20 @@ You need to set the `rewriter path`, `query`, and `context` in the script, and t
 python single_rewrite.py
 ```
 
+## Checkpoints
+We provide a T5QR checkpoint [here](https://drive.google.com/file/d/1V531-kafArfr8AuJYwvNOOqpeoKconwB/view?usp=share_link),  which was trained on the training data of [QReCC](https://github.com/apple/ml-qrecc) with 5 epochs. Note that only previous queries were used as the context.
 
+We randomly select 170 turns from CAsT-19 and CAsT-20 and perform a human evaluation on this checkpoint.
+Specifically, we set three levels (0, 1 ,2). "0" means incorrect rewriting, "1" means moderatelly correct rewriting (only very few turns belog to this category.), and "2" means (totally) correct rewriting.
+Results are shown below:
+```
+#level-0: #level-1: #level-2
+CAsT-19 (105 turns): [24, 6, 75]. 71.4% belongs to level-2.
+CAsT-19+20 (170 turns): [68, 11, 91]. 53.5% belongs to level-2.
+```
+Since the many turns in CAsT-20 have response dependency, so the performance of this checkpoint on CAsT-20 is significantly worse than that on CAsT-19, which only has the dependency on previous queries.
+
+The judgement file is also provided in the above checkpoint zip file. Note that we have ignored the turn whose `cur_utt_text` is the same as the `oracle_utt_text`.
 
 
 
