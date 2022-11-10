@@ -37,29 +37,38 @@ def inference_t5qr(args):
                                   sampler=ddp_sampler,
                                   batch_size=args.batch_size, 
                                   collate_fn=test_dataset.get_collate_fn(args))
-    # begin to inference
-    with open(args.output_file_path, "a+") as f:
-        with torch.no_grad():
-            model.eval()
-            for batch in tqdm(test_dataloader, desc="Step"):
-                bt_input_ids = batch["bt_input_ids"].to(args.device)
-                bt_attention_mask = batch["bt_attention_mask"].to(args.device)
-                if args.n_gpu > 1:
-                    output_seqs = model.module.generate(input_ids=bt_input_ids, 
-                                                        attention_mask=bt_attention_mask, 
-                                                        do_sample=False,
-                                                        max_length=args.max_query_length)
-                else:
-                    output_seqs = model.generate(input_ids=bt_input_ids, 
-                                                        attention_mask=bt_attention_mask, 
-                                                        do_sample=False,
-                                                        max_length=args.max_query_length)
-                outputs = tokenizer.batch_decode(output_seqs, skip_special_tokens=True)
-                for i in range(len(outputs)):
-                    record = {}
-                    record["sample_id"] = batch["bt_sample_ids"][i]
-                    record["t5_rewrite"] = outputs[i]
-                    f.write(json.dumps(record) + '\n') 
+    
+    results = []  
+    with torch.no_grad():
+        model.eval()
+        for batch in tqdm(test_dataloader, desc="Step"):
+            bt_input_ids = batch["bt_input_ids"].to(args.device)
+            bt_attention_mask = batch["bt_attention_mask"].to(args.device)
+            if args.n_gpu > 1:
+                output_seqs = model.module.generate(input_ids=bt_input_ids, 
+                                                    attention_mask=bt_attention_mask, 
+                                                    do_sample=False,
+                                                    max_length=args.max_query_length)
+            else:
+                output_seqs = model.generate(input_ids=bt_input_ids, 
+                                                    attention_mask=bt_attention_mask, 
+                                                    do_sample=False,
+                                                    max_length=args.max_query_length)
+            outputs = tokenizer.batch_decode(output_seqs, skip_special_tokens=True)
+            for i in range(len(outputs)):
+                record = {}
+                record["sample_id"] = batch["bt_sample_ids"][i]
+                record["context"] = batch["bt_ctx_utts_text"][i]
+                record["current_utterance"] = batch["bt_cur_utt_text"][i]
+                record["oracle_rewrite"] = batch["bt_oracle_utt_text"][i]
+                record["t5_rewrite"] = outputs[i]
+                record["human_judge"] = ""
+                results.append(record)
+
+    # We use "a+" for DDP, but note that it will cause the output json file cannot be loaded with json.load(f)
+    # if using multiple GPUs, because there will be n_gpu "results" dumped into the output file.
+    with open(args.output_file_path, "a+") as f:    
+        f.write(json.dumps(results, indent=4))
 
     logger.info("Inference finsh!")
     

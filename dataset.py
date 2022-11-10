@@ -40,7 +40,11 @@ class T5RewriterDataset(Dataset):
             else:
                 tgt_seq = ""
             
-            self.examples.append((record["sample_id"], src_seq, tgt_seq))
+            self.examples.append((record["sample_id"], 
+                                  src_seq, 
+                                  tgt_seq,
+                                  cur_utt_text,
+                                  ctx_utts_text))
 
 
     def __len__(self):
@@ -53,7 +57,7 @@ class T5RewriterDataset(Dataset):
     def get_collate_fn(args):
         
         def collate_fn(batch):
-            bt_sample_ids, bt_src_seq, bt_tgt_seq = list(zip(*batch)) # unzip
+            bt_sample_ids, bt_src_seq, bt_tgt_seq, bt_cur_utt_text, bt_ctx_utts_text = list(zip(*batch)) # unzip
             bt_src_encoding = args.tokenizer(bt_src_seq, 
                                             padding="longest", 
                                             max_length=args.max_seq_length, 
@@ -73,6 +77,12 @@ class T5RewriterDataset(Dataset):
             else:
                 bt_labels = None
 
-            return {"bt_sample_ids": bt_sample_ids, "bt_input_ids":bt_input_ids, "bt_attention_mask":bt_attention_mask, "bt_labels": bt_labels}
+            return {"bt_sample_ids": bt_sample_ids, 
+                    "bt_input_ids":bt_input_ids, 
+                    "bt_attention_mask":bt_attention_mask, 
+                    "bt_labels": bt_labels,
+                    "bt_cur_utt_text": bt_cur_utt_text,
+                    "bt_ctx_utts_text": bt_ctx_utts_text,
+                    "bt_oracle_utt_text": bt_tgt_seq}
 
         return collate_fn
