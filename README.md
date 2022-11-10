@@ -42,7 +42,7 @@ We support using DDP for inference on multi GPUs. The corresponding rewrite is i
 
 
 ## Quick Single Rewriting
-We provide a "quick" script to perform a single rewriting in `single_rewrite.py`.
+We provide a "quick" script (i.e., `single_rewrite.py`) to perform a single rewriting.
 You need to set the `rewriter path`, `query`, and `context` in the script, and then run:
 ```python
 python single_rewrite.py
