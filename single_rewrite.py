@@ -12,17 +12,29 @@ class Rewriter:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.t5.to(self.device)
         self.max_query_length = 32
-        self.max_seq_length = 128
+        self.max_response_length = 100
+        self.max_seq_length = 256
 
-    def __call__(self, query, context):
-        src_seq = context + [query]
-        src_seq.reverse()
+    def __call__(self, cur_utt_text, ctx_utts_text, ctx_resps_text):
+        ctx_resps_text = ctx_resps_text[-3:]     
+        for i in range(len(ctx_resps_text)):
+            ctx_resps_text[i] = " ".join(ctx_resps_text[i].split()[:self.max_response_length]) 
+        ctx_utts_text.reverse()
+        ctx_resps_text.reverse()
+
+        src_seq = []
+        src_seq.append(cur_utt_text)
+        for i in range(len(ctx_utts_text)):
+            if i < len(ctx_resps_text):
+                src_seq.append(ctx_resps_text[i])
+            src_seq.append(ctx_utts_text[i])                
         src_seq = " [SEP] ".join(src_seq)
+
         encoding = self.tokenizer(src_seq,
                                   padding="longest", 
                                   max_length=self.max_query_length, 
                                   truncation=True, 
-                                return_tensors="pt")
+                                  return_tensors="pt")
 
         input_ids, attention_mask = encoding.input_ids, encoding.attention_mask
         input_ids = input_ids.to(self.device)
@@ -37,16 +49,12 @@ class Rewriter:
 
 
 if __name__ == "__main__":
-    rewriter_path = "./outputs/t5qr_cast19/checkpoints/epoch-4"
+    rewriter_path = "./outputs/t5qr_qrecc/checkpoints/epoch-5"
     rewriter = Rewriter(rewriter_path)
     
     # An example
-    # query = "What are its symptoms?"
-    # context = ["What is throat cancer?", "Is it treatable?", "Tell me about lung cancer."]  
-    # # expected rewrite: What are lung cancer's symptoms?
-    # rewrite = rewriter(query, context)
-
-    query = "What of China"
-    context = ["What is the population of USA", "What is its GDP"]
-    rewrite = rewriter(query, context)
+    cur_utt_text = "How about China"
+    ctx_utts_text = ["What is the population of USA", "What is its GDP"]
+    ctx_resps_text = []
+    rewrite = rewriter(cur_utt_text, ctx_utts_text, ctx_resps_text)
     print("Rewrite: {}".format(rewrite))
