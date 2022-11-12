@@ -15,7 +15,7 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 from utils import set_seed
-from dataset import T5RewriterDataset
+from dataset import T5RewriterDataset, Collator
 from IPython import embed
 
 def inference_t5qr(args):
@@ -31,12 +31,17 @@ def inference_t5qr(args):
     dist.barrier()
 
     test_dataset = T5RewriterDataset(args, args.test_file_path)
+    collate_kwargs = {"tokenizer": args.tokenizer, 
+                      "max_query_length": args.max_query_length, 
+                      "max_seq_length": args.max_seq_length,
+                      "collate_type": "test"}
+    collate_fn = Collator(**collate_kwargs)
     args.batch_size = args.per_gpu_eval_batch_size * max(1, args.n_gpu)
-    ddp_sampler = DistributedSampler(test_dataset)
+    ddp_sampler = DistributedSampler(test_dataset, shuffle=False)
     test_dataloader = DataLoader(test_dataset, 
                                   sampler=ddp_sampler,
                                   batch_size=args.batch_size, 
-                                  collate_fn=test_dataset.get_collate_fn(args))
+                                  collate_fn=collate_fn)
     
     results = []  
     with torch.no_grad():
@@ -81,13 +86,13 @@ def get_args():
     parser.add_argument("--model_checkpoint_path", type=str, required=True)
     parser.add_argument("--test_file_path", type=str, required=True)
     parser.add_argument('--output_file_path', type=str, required=True)
-    parser.add_argument("--collate_fn_type", type=str, required=True, choices=["test"])
     parser.add_argument('--local_rank', type=int, default=-1, metavar='N', help='Local process rank.')  # you need this argument in your scripts for DDP to work
 
     parser.add_argument("--per_gpu_eval_batch_size", type=int, required=True)
     parser.add_argument("--use_data_percent", type=float, default=1.0)
     
     parser.add_argument("--max_query_length", type=int, default=32, help="Max single query length")
+    parser.add_argument("--max_response_length", type=int, required=True, help="Max response token length")
     parser.add_argument("--max_seq_length", type=int, required=True, help="Max concatenation length of the session.")
     
     args = parser.parse_args()

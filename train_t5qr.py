@@ -1,4 +1,4 @@
-from IPython import embed
+# from IPython import embed
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ from tensorboardX import SummaryWriter
 from transformers import get_linear_schedule_with_warmup, AdamW, T5Tokenizer, T5ForConditionalGeneration
 
 from utils import check_dir_exist_or_build, set_seed, json_dumps_arguments
-from dataset import T5RewriterDataset
+from dataset import T5RewriterDataset, Collator
 
 
 def save_model(output_checkpoint_path, model, query_tokenizer, epoch):
@@ -49,12 +49,23 @@ def train_t5qr(args):
 
     # training data and optimizer
     train_dataset = T5RewriterDataset(args, args.train_file_path)
+    collate_kwargs = {"tokenizer": args.tokenizer, 
+                      "max_query_length": args.max_query_length, 
+                      "max_seq_length": args.max_seq_length,
+                      "collate_type": "train"}
+    collate_fn = Collator(**collate_kwargs)
     train_dataloader = DataLoader(train_dataset, 
                                   shuffle=True,
                                   batch_size=args.train_batch_size, 
-                                  collate_fn=train_dataset.get_collate_fn(args))
+                                  collate_fn=collate_fn)
 
-    
+
+
+    dev_dataset = T5RewriterDataset(args, args.dev_file_path)
+    dev_dataloader = DataLoader(dev_dataset, 
+                                  shuffle=False,
+                                  batch_size=args.dev_batch_size, 
+                                  collate_fn=collate_fn)
     total_training_steps = args.num_train_epochs * (len(train_dataset) // args.train_batch_size + int(bool(len(train_dataset) % args.train_batch_size)))    
 
     optimizer = AdamW(model.parameters(), lr=args.learning_rate, eps=args.adam_epsilon)
@@ -77,10 +88,18 @@ def train_t5qr(args):
     logger.info("  Total optimization steps = %d", total_training_steps)
 
     cur_step = 0
-    epoch_iterator = trange(args.num_train_epochs, desc="Epoch")
+    min_dev_loss = float('inf')
+    break_count = 0
 
+    epoch_iterator = trange(args.num_train_epochs, desc="Epoch")
     for epoch in epoch_iterator:
+        if break_count == 2:
+            break
         for batch in tqdm(train_dataloader,  desc="Step"):
+            if break_count == 2:
+                logger.info("Trigger early stop at epoch-{}. Current step-{}.".format(epoch, cur_step))
+                break
+
             model.zero_grad()
             model.train()
             
@@ -108,12 +127,42 @@ def train_t5qr(args):
                 log_writer.add_scalar("train_t5_qr_loss", loss, cur_step)
             cur_step += 1    # avoid saving the model of the first step.
             
-            # save model 
+            
             if args.need_output and cur_step % args.model_save_steps == 0:
                 save_model(args.output_checkpoint_path, model, tokenizer, epoch)
-
+                
+                # Validation
+                dev_loss = validation(model, dev_dataloader)
+                log_writer.add_scalar("dev_t5_qr_loss", dev_loss, cur_step)
+                dev_loss = dev_loss.item()
+                logger.info("Epoch-{}-Step-{}, Dev loss: {}.".format(epoch, cur_step, dev_loss))
+                if dev_loss < min_dev_loss:
+                    min_dev_loss = dev_loss
+                    break_count = 0
+                else:
+                    break_count += 1
+    
 
     logger.info("Training finish!")
+
+
+def validation(model, dev_dataloader):
+    dev_loss = 0.0
+    with torch.no_grad():
+        model.eval()
+        for batch in tqdm(dev_dataloader,  desc="Step"):
+            bt_input_ids, bt_attention_mask, bt_labels = (batch["bt_input_ids"], batch["bt_attention_mask"], batch["bt_labels"])
+            bt_input_ids = bt_input_ids.to(args.device)
+            bt_attention_mask = bt_attention_mask.to(args.device)
+            bt_labels = bt_labels.to(args.device)
+    
+            loss = model(input_ids=bt_input_ids, 
+                         attention_mask=bt_attention_mask, 
+                         labels=bt_labels).loss
+            dev_loss += loss
+            
+    return dev_loss
+
 
 
 def get_args():
@@ -122,6 +171,7 @@ def get_args():
     parser.add_argument("--dataset", type=str, default="qrecc")
     parser.add_argument("--model_path", type=str, required=True, help="T5 model path.")
     parser.add_argument("--train_file_path", type=str, required=True, help="Path of the training dialog file.")
+    parser.add_argument("--dev_file_path", type=str, required=True, help="Path of the training dialog file.")
     parser.add_argument("--log_path", type=str, required=True, help="Path of output tensorboard log.")
     parser.add_argument("--output_checkpoint_path", type=str, required=True, help="Path of saved models.")
     parser.add_argument("--output_dir_path", type=str, required=True, help="Dir path of the output info.")
@@ -135,6 +185,7 @@ def get_args():
     parser.add_argument("--use_data_percent", type=float, default=1.0, help="Percent of samples to use. Faciliating the debugging.")
     parser.add_argument("--num_train_epochs", type=int, required=True, help="Training epochs")
     parser.add_argument("--train_batch_size", type=int, required=True, help="train batch size, only one GPU")
+    parser.add_argument("--dev_batch_size", type=int, required=True, help="train batch size, only one GPU")
     parser.add_argument("--learning_rate", type=float, default=5e-5, help="learning rate")
     parser.add_argument("--weight_decay", type=float, default=0.0, help="weight_decay")
     parser.add_argument("--adam_epsilon", type=float, default=1e-8, help="adam epsilon")
@@ -142,10 +193,9 @@ def get_args():
     parser.add_argument("--num_warmup_steps", type=int, default=0, help="Warm up steps.")
 
     parser.add_argument("--max_query_length", type=int, default=32, help="Max single query length")
+    parser.add_argument("--max_response_length", type=int, required=True, help="Max response token length")
     parser.add_argument("--max_seq_length", type=int, required=True, help="Max concatenation length of the session.")
     
-    parser.add_argument("--collate_fn_type", type=str, required=True, choices=["train", "test"], help="To control how to organize the batch data.")
-
 
     args = parser.parse_args()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
