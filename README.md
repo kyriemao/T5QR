@@ -32,7 +32,7 @@ We provide examples of training/dev file and test file in the `data` folder.
 ```bash
 bash run_train.sh
 ```
-You can set the maximum training epochs to `num_train_epochs`. But the early stopping will be triggered when the dev loss does not decresae for two consecutive periods of model saving.
+You can set the maximum training epochs to `num_train_epochs`. But the early stopping will be triggered when the dev loss does not decresae for two consecutive periods of model saving. Therefore, you should use the third-to-last saved model as the final model.
 
 ## Inference
 ```bash
