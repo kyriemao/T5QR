@@ -13,11 +13,11 @@ def trec_eval(run_trec_file, qrel_trec_file, retrieval_output_path, rel_threshol
     for line in run_data:
         line = line.split(" ")
         sample_id = line[0]
-        pid = line[2]
+        doc_id = line[2]
         score = float(line[4])
         if sample_id not in runs:
             runs[sample_id] = {}
-        runs[sample_id][pid] = score
+        runs[sample_id][doc_id] = score
 
     # process qrel trec file
     with open(qrel_trec_file, 'r') as f:

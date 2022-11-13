@@ -58,9 +58,9 @@ def bm25_retrieval(args):
         for qid in hits:
             for i, item in enumerate(hits[qid]):
                 rank = i + 1
-                score = args.top_n - i
+                rank_score = args.top_n - i
                 doc_id = item.docid
-                f.write("{} {} {} {} {} {}".format(qid, "Q0", doc_id, rank, score, "bm25"))
+                f.write("{} {} {} {} {} {}".format(qid, "Q0", doc_id, rank, rank_score, "bm25"))
 
     
     # evaluation
@@ -82,7 +82,8 @@ def get_args():
 
     parser.add_argument("--retrieval_output_path", type=str, required=True)
     parser.add_argument("--force_emptying_dir", action="store_true", help="Force to empty the (output) dir.")
-
+    parser.add_argument("--seed", type=int, default=42)
+    
     # main
     args = parser.parse_args()
     check_dir_exist_or_build([args.retrieval_output_path])

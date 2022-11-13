@@ -56,5 +56,12 @@ def set_seed(args):
     os.environ["PYTHONHASHSEED"] = str(args.seed)
 
 
-
-
+def get_has_qrel_label_sample_ids(qrel_file):
+    with open(qrel_file, 'r') as f:
+        qrel_data = f.readlines()
+    qids = set()
+    for line in qrel_data:
+        line = line.strip().split("\t")
+        query = line[0]
+        qids.add(query)
+    return qids

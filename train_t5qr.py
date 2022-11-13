@@ -168,7 +168,6 @@ def validation(model, dev_dataloader):
 def get_args():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--dataset", type=str, default="qrecc")
     parser.add_argument("--model_path", type=str, required=True, help="T5 model path.")
     parser.add_argument("--train_file_path", type=str, required=True, help="Path of the training dialog file.")
     parser.add_argument("--dev_file_path", type=str, required=True, help="Path of the training dialog file.")
