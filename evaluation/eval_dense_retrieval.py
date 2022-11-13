@@ -6,7 +6,7 @@ logger = logging.getLogger(__name__)
 import os
 import pickle
 import sys
-# sys.path.append('..')
+sys.path.append('..')
 sys.path.append('.')
 
 import json
@@ -22,7 +22,7 @@ from pprint import pprint
 
 from trec_eval import trec_eval
 from dense_retrievers import load_dense_retriever
-from ..utils import check_dir_exist_or_build, json_dumps_arguments, set_seed, get_has_qrel_label_sample_ids
+from utils import check_dir_exist_or_build, json_dumps_arguments, set_seed, get_has_qrel_label_sample_ids
 
 
 
@@ -69,7 +69,7 @@ def get_query_embs(args):
     
     query_encoding_dataset = []
     for record in data:
-        sample_id = record['sampel_id']
+        sample_id = record['sample_id']
         query = record[args.eval_field_name]
         query_encoding_dataset.append([sample_id, query])
 
@@ -130,16 +130,16 @@ def faiss_flat_retrieval_one_by_one_and_finally_merge(args, query_embs):
     index = build_faiss_index(args)
 
     merged_candidate_matrix = None
-    # Automaticall get the number of passage blocks
+    # Automaticall get the number of doc blocks
     for filename in os.listdir(args.index_path):
         try:
-            args.passage_block_num = max(args.passage_block_num, int(filename.split(".")[1]) + 1)
+            args.num_doc_block = int(filename.split(".")[1]) + 1
         except:
             continue
-    print("Automatically detect that the number of doc blocks is: {}".format(args.passage_block_num))
+    print("Automatically detect that the number of doc blocks is: {}".format(args.num_doc_block))
     
-    for block_id in range(args.passage_block_num):
-        logger.info("Loading passage block " + str(block_id))
+    for block_id in range(args.num_doc_block):
+        logger.info("Loading doc block " + str(block_id))
 
         # load doc embeddings
         with open(os.path.join(args.index_path, "doc_emb_block.{}.pb".format(block_id)), 'rb') as handle:
@@ -150,9 +150,12 @@ def faiss_flat_retrieval_one_by_one_and_finally_merge(args, query_embs):
                 cur_eid2did = np.array(cur_eid2did)
 
         # Split to avoid the doc embeddings to be too large
-        num_total_doc = len(cur_doc_embs)
-        num_doc_per_split = 10000000    # please set it according to your GPU size
-        num_split_block = max(1, num_total_doc // num_doc_per_split)
+        num_total_doc_per_block = len(cur_doc_embs)
+        num_doc_per_split = 10000000    # please set it according to your GPU size. 700w doc needs ~28GB
+        num_split_block = max(1, num_total_doc_per_block // num_doc_per_split)
+        logger.info("num_total_doc: {}".format(num_total_doc_per_block))
+        logger.info("num_doc_per_split: {}".format(num_doc_per_split))
+        logger.info("num_split_block: {}".format(num_split_block))
         cur_doc_embs_list = np.array_split(cur_doc_embs, num_split_block)
         cur_eid2did_list = np.array_split(cur_eid2did, num_split_block)
         for split_idx in range(len(cur_doc_embs_list)):
@@ -244,6 +247,7 @@ def dense_retrieval(args):
                 rank_score = args.top_n - i # use the rank score for pytrec
                 real_score = retrieval_scores[i] 
                 f.write("{} {} {} {} {} {} {}".format(sample_id, "Q0", doc_id, rank, rank_score, real_score, "ance"))
+                f.write('\n')
             
     # evaluation
     trec_eval(run_trec_file, args.qrel_file_path, args.retrieval_output_path, args.rel_threshold)
@@ -276,11 +280,13 @@ def get_args():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     args.device = device
 
-    check_dir_exist_or_build([args.retrieval_output_path])
+    check_dir_exist_or_build([args.retrieval_output_path], args.force_emptying_dir)
     json_dumps_arguments(os.path.join(args.retrieval_output_path, "parameters.txt"), args)
  
     logger.info("---------------------The arguments are:---------------------")
     pprint(args)
+
+    return args
 
 
 

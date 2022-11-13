@@ -3,7 +3,7 @@ import json
 import pytrec_eval
 import numpy as np
 from pprint import pprint
-
+from IPython import embed
 
 def trec_eval(run_trec_file, qrel_trec_file, retrieval_output_path, rel_threshold):
     # process run trec file
@@ -27,7 +27,7 @@ def trec_eval(run_trec_file, qrel_trec_file, retrieval_output_path, rel_threshol
     for line in qrel_data:
         line = line.strip().split("\t")
         query = line[0]
-        passage = line[2]
+        doc_id = line[2]
         rel = int(line[3])
         if query not in qrels:
             qrels[query] = {}
@@ -35,13 +35,13 @@ def trec_eval(run_trec_file, qrel_trec_file, retrieval_output_path, rel_threshol
             qrels_ndcg[query] = {}
 
         # for NDCG
-        qrels_ndcg[query][passage] = rel
+        qrels_ndcg[query][doc_id] = rel
         # for MAP, MRR, Recall
         if rel >= rel_threshold:
             rel = 1
         else:
             rel = 0
-        qrels[query][passage] = rel
+        qrels[query][doc_id] = rel
  
 
     # pytrec_eval eval
@@ -71,7 +71,18 @@ def trec_eval(run_trec_file, qrel_trec_file, retrieval_output_path, rel_threshol
     
     print("---------------------Evaluation results:---------------------")    
     pprint(res)
-    with open(os.path.join(retrieval_output_path, "metric.res"), "w") as f:
-        f.write(json.dumps(res, indent=4))
+    if retrieval_output_path:
+        with open(os.path.join(retrieval_output_path, "metric.res"), "w") as f:
+            f.write(json.dumps(res, indent=4))
 
     return res
+
+
+
+if __name__ == "__main__":
+    run_trec_file = "/data1/kelong_mao/experiments/test/cast19/t5qr/run.trec"
+    qrel_trec_file = "/data1/kelong_mao/datasets/cast19/preprocessed/cast19_qrel.tsv"
+    rel_threshold = 1
+    retrieval_output_path = None
+
+    trec_eval(run_trec_file, qrel_trec_file, retrieval_output_path, rel_threshold)

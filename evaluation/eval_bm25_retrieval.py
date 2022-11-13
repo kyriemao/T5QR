@@ -1,17 +1,17 @@
-# from IPython import embed
+from IPython import embed
 import logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 import os
 import sys
-# sys.path.append('..')
+sys.path.append('..')
 sys.path.append('.')
 
 import json
 import argparse
 from pprint import pprint
-from ..utils import check_dir_exist_or_build, json_dumps_arguments, set_seed
+from utils import check_dir_exist_or_build, json_dumps_arguments, set_seed
 
 from pyserini.search.lucene import LuceneSearcher
 from trec_eval import trec_eval
@@ -36,7 +36,7 @@ def bm25_retrieval(args):
         data = json.load(f)
 
     for record in data:
-        rewrite = record[args.rewrite_field_name]
+        rewrite = record[args.eval_field_name]
         query_list.append(rewrite)
         qid_list.append(record['sample_id'])
    
@@ -45,23 +45,19 @@ def bm25_retrieval(args):
     query_chunks = auto_split_to_chunks(query_list)
     
     # pyserini search
-    searcher = LuceneSearcher(args.index_dir_path)
+    searcher = LuceneSearcher(args.index_path)
     searcher.set_bm25(args.bm25_k1, args.bm25_b)
-    hits = []
-    for chunk_id in range(len(qid_chunks)):
-        cur_hits = searcher.batch_search(query_chunks[chunk_id], qid_chunks[chunk_id], k = args.top_n, threads = 20)
-        hits.extend(cur_hits)
-    
-    # write to file
     run_trec_file = os.path.join(args.retrieval_output_path, "res.trec")
     with open(run_trec_file, "w") as f:
-        for qid in hits:
-            for i, item in enumerate(hits[qid]):
-                rank = i + 1
-                rank_score = args.top_n - i
-                doc_id = item.docid
-                f.write("{} {} {} {} {} {}".format(qid, "Q0", doc_id, rank, rank_score, "bm25"))
-
+        for chunk_id in range(len(qid_chunks)):
+            hits = searcher.batch_search(query_chunks[chunk_id], qid_chunks[chunk_id], k = args.top_n, threads = 20)
+            for qid in hits:
+                for i, item in enumerate(hits[qid]):
+                    rank = i + 1
+                    rank_score = args.top_n - i
+                    doc_id = item.docid
+                    f.write("{} {} {} {} {} {}".format(qid, "Q0", doc_id, rank, rank_score, "bm25"))
+                    f.write('\n')
     
     # evaluation
     trec_eval(run_trec_file, args.qrel_file_path, args.retrieval_output_path, args.rel_threshold)
@@ -86,7 +82,7 @@ def get_args():
     
     # main
     args = parser.parse_args()
-    check_dir_exist_or_build([args.retrieval_output_path])
+    check_dir_exist_or_build([args.retrieval_output_path], args.force_emptying_dir)
     json_dumps_arguments(os.path.join(args.retrieval_output_path, "parameters.txt"), args)
  
     logger.info("---------------------The arguments are:---------------------")
