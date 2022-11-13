@@ -32,6 +32,9 @@ We provide examples of training/dev file and test file in the `data` folder.
 ```bash
 bash run_train.sh
 ```
+We randomly split the training set of [QReCC](https://github.com/apple/ml-qrecc) to new training (90%) and dev(10%) sets and use them to train a T5 rewriter model. 
+<!-- The trained model checkpoint can be downloaded [here](). -->
+
 You can set the maximum training epochs to `num_train_epochs`. But the early stopping will be triggered when the dev loss does not decresae for two consecutive periods of model saving. Therefore, you should use the third-to-last saved model as the final model.
 
 ## Inference
@@ -39,21 +42,6 @@ You can set the maximum training epochs to `num_train_epochs`. But the early sto
 bash run_inference.sh
 ```
 We support using DDP for inference on multi GPUs. The corresponding rewrite is in the `"t5_rewrite"` field of the output file.
-
-
-
-## Quick Single Rewriting
-We provide a "quick" script (i.e., `single_rewrite.py`) to perform a single rewriting.
-You need to set the `rewriter path`, `cur_utt_text` (i.e., the current user query), `ctx_utts_text` (i.e., the previous user queries), and `ctx_resps_text`(i.e., the previous agent responses) in the script, and then run:
-```python
-python single_rewrite.py
-```
-
-
-## Training and Inference
-We randomly split the training set of [QReCC](https://github.com/apple/ml-qrecc) to new training (90%) and dev(10%) sets and use them to train a T5 rewriter model. The trained model checkpoint can be downloaded [here]().
-
-We evaluate the model on QReCC test set, CAsT-19, and CAsT-20 test sets. 
 
 Note that:
 for QReCC:
@@ -69,9 +57,19 @@ max_seq_length=256  # CAsT-20 only include one response and CAsT-19 does not inc
 
 
 
-## Evaluation
+## Quick Single Rewriting
+We provide a "quick" script (i.e., `single_rewrite.py`) to perform a single rewriting.
+You need to set the `rewriter path`, `cur_utt_text` (i.e., the current user query), `ctx_utts_text` (i.e., the previous user queries), and `ctx_resps_text`(i.e., the previous agent responses) in the script, and then run:
+```python
+python single_rewrite.py
+```
 
-After conversational query rewriting, we can evaluate the rewrites by directly comparing it with the manual oracle rewrites or on downstream ranking tasks. We provide the evaluation instruction in `evaluation` folder.
+
+
+## Evaluation
+After conversational query rewriting, we can evaluate the rewrites by directly comparing it with the manual oracle rewrites or on downstream ranking tasks. 
+Currently, the evaluation is mainly conducted on QReCC test set, CAsT-19, and CAsT-20 test sets. 
+We provide the evaluation instruction in `evaluation` folder.
 
 
 
