@@ -44,12 +44,12 @@ bash run_inference.sh
 We support using DDP for inference on multi GPUs. The corresponding rewrite is in the `"t5_rewrite"` field of the output file.
 
 Note that:
-for QReCC:
+for QReCC, set:
 ```python
 max_response_length = 100
 max_seq_length = 384
 ```
-While for CAsT-19 and 20:
+While for CAsT-19 and 20, set:
 ```python
 max_response_length=128 # As the **last** automatic canonical response in CAsT-20 is a longer passage compared with the responses in QReCC which are shorter text span.
 max_seq_length=256  # CAsT-20 only include one response and CAsT-19 does not include response, so its maximum sequence length can be shorter than that of QReCC.
