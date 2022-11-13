@@ -50,8 +50,8 @@ python single_rewrite.py
 ```
 
 
-## Experiments
-We randomly split the training set of [QReCC](https://github.com/apple/ml-qrecc) to new training (90%) and dev(10%) sets and use them to train a T5 rewriter model. The trained model checkpoint ~~can~~ be downloaded [here]().
+## Training and Inference
+We randomly split the training set of [QReCC](https://github.com/apple/ml-qrecc) to new training (90%) and dev(10%) sets and use them to train a T5 rewriter model. The trained model checkpoint can be downloaded [here]().
 
 We evaluate the model on QReCC test set, CAsT-19, and CAsT-20 test sets. 
 
@@ -73,11 +73,6 @@ max_seq_length=256  # CAsT-20 only include one response and CAsT-19 does not inc
 
 After conversational query rewriting, we can evaluate the rewrites by directly comparing it with the manual oracle rewrites or on downstream ranking tasks. We provide the evaluation instruction in `evaluation` folder.
 
-
-
-
-
-## Human Evaluation
 
 
 

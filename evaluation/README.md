@@ -3,7 +3,7 @@
 ## Evaluation with the oracle rewrite
 Using BLEU metric to evaluate the rewrites by comparing with the oracle counterparts.
 ```python
-python eval_bleu.py --eval_file_path="" --eval_field_name="t5_rewrite"
+python eval_bleu.py --eval_file_path="../outputs/t5_rewrite_cast19.json" --eval_field_name="t5_rewrite"
 ```
 
 
@@ -23,7 +23,7 @@ bash run_eval_dense_retrieval.sh
 
 ## Case Study
 Besides the overall performance, it is also important to investigate the performance of each concrete conversational turn, from which one can compare the retrieval effectiveness of two different rewriters intuitively.
-To achieve such a case study, one can refer to `case_study.py`.
+To perform such a case study, one can refer to `case_study.py`.
 ```python
 python case_study.py
 ```
