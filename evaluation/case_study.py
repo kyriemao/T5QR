@@ -55,8 +55,8 @@ def output_case_study_file(res1, res2, tag1, tag2, metric_name, orig_eval_file_p
             continue
         val1 = res1[sample_id][metric_name]
         val2 = res2[sample_id][metric_name]
-        record["{}_val1"] = val1
-        record["{}_val2"] = val2
+        record["{}_score".format(tag1)] = val1
+        record["{}_score".format(tag2)] = val2
         if val1 > val2:
             record["which_is_better"] = tag1
         elif val1 < val2:
