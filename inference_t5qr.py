@@ -63,7 +63,8 @@ def inference_t5qr(args):
             for i in range(len(outputs)):
                 record = {}
                 record["sample_id"] = batch["bt_sample_ids"][i]
-                record["context"] = batch["bt_ctx_utts_text"][i]
+                record["utterance_context"] = batch["bt_ctx_utts_text"][i]
+                record["response_context"] = batch["bt_ctx_resps_text"][i]
                 record["current_utterance"] = batch["bt_cur_utt_text"][i]
                 record["oracle_rewrite"] = batch["bt_oracle_utt_text"][i]
                 record["t5_rewrite"] = outputs[i]

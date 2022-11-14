@@ -44,7 +44,7 @@ def load_qrel_trec(qrel_trec_file, rel_threshold):
 
 
 
-def output_case_study_file(res1, res2, tag1, tag2, metric_name, orig_eval_file_path, case_study_file_path):
+def output_case_study_file(res1, res2, tag1, tag2, metric_name, orig_eval_file_path, case_study_file_path, ):
     with open(orig_eval_file_path, "r") as f:
         data = json.load(f)
     
@@ -70,6 +70,7 @@ def output_case_study_file(res1, res2, tag1, tag2, metric_name, orig_eval_file_p
 
     print("case study output file ok!")
 
+
 def which_is_better(run_trec_file1, run_trec_file2, tag1, tag2, metric_name, qrel_trec_file, rel_threshold, orig_eval_file_path, case_study_file_path):
     runs1 = load_run_trec(run_trec_file1)
     runs2 = load_run_trec(run_trec_file2)
@@ -80,7 +81,7 @@ def which_is_better(run_trec_file1, run_trec_file2, tag1, tag2, metric_name, qre
     res2 = evaluator.evaluate(runs2)
     
     output_case_study_file(res1, res2, tag1, tag2, metric_name, orig_eval_file_path, case_study_file_path)
-   
+
 
 if __name__ == "__main__":
     run_trec_file1 = "./results/cast20_ance_t5_rewrite/res.trec"

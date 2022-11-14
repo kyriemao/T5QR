@@ -1,6 +1,6 @@
 port=28555
-test_file_path="./data/test_cast19.json"
-output_file_path="./outputs/t5_rewrite_cast19.json"
+test_file_path="./data/test_cast20.json"
+output_file_path="./outputs/t5_rewrite_cast20.json"
 
 CUDA_VISIBLE_DEVICES=0 python -m torch.distributed.launch \
 --nproc_per_node=1 \

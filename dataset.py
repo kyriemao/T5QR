@@ -21,7 +21,7 @@ class Collator:
         self.max_seq_length = kwargs['max_seq_length']
 
     def __call__(self, batch):
-        bt_sample_ids, bt_src_seq, bt_tgt_seq, bt_cur_utt_text, bt_ctx_utts_text = list(zip(*batch)) # unzip
+        bt_sample_ids, bt_src_seq, bt_tgt_seq, bt_cur_utt_text, bt_ctx_utts_text, bt_ctx_resps_text = list(zip(*batch)) # unzip
         bt_src_encoding = self.tokenizer(bt_src_seq, 
                                         padding="longest", 
                                         max_length=self.max_seq_length, 
@@ -47,6 +47,7 @@ class Collator:
                 "bt_labels": bt_labels,
                 "bt_cur_utt_text": bt_cur_utt_text,
                 "bt_ctx_utts_text": bt_ctx_utts_text,
+                "bt_ctx_resps_text": bt_ctx_resps_text,
                 "bt_oracle_utt_text": bt_tgt_seq}
 
         
@@ -91,11 +92,16 @@ class T5RewriterDataset(Dataset):
             else:
                 tgt_seq = ""
             
+            
+            ctx_utts_text.reverse()
+            ctx_resps_text.reverse()
+            
             self.examples.append((record["sample_id"], 
                                   src_seq, 
                                   tgt_seq,
                                   cur_utt_text,
-                                  ctx_utts_text))
+                                  ctx_utts_text,
+                                  ctx_resps_text))
 
 
     def __len__(self):
