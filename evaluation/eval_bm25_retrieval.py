@@ -55,8 +55,9 @@ def bm25_retrieval(args):
                 for i, item in enumerate(hits[qid]):
                     rank = i + 1
                     rank_score = args.top_n - i
+                    real_score = item.score
                     doc_id = item.docid
-                    f.write("{} {} {} {} {} {}".format(qid, "Q0", doc_id, rank, rank_score, "bm25"))
+                    f.write("{} {} {} {} {} {} {}".format(qid, "Q0", doc_id, rank, rank_score, real_score, "bm25"))
                     f.write('\n')
     
     # evaluation

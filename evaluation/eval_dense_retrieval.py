@@ -151,7 +151,7 @@ def faiss_flat_retrieval_one_by_one_and_finally_merge(args, query_embs):
 
         # Split to avoid the doc embeddings to be too large
         num_total_doc_per_block = len(cur_doc_embs)
-        num_doc_per_split = 10000000    # please set it according to your GPU size. 700w doc needs ~28GB
+        num_doc_per_split = 500000    # please set it according to your GPU size. 700w doc needs ~28GB
         num_split_block = max(1, num_total_doc_per_block // num_doc_per_split)
         logger.info("num_total_doc: {}".format(num_total_doc_per_block))
         logger.info("num_doc_per_split: {}".format(num_doc_per_split))

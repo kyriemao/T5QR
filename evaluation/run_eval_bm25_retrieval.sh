@@ -5,7 +5,7 @@ retrieval_output_path="./results/cast20_bm25"
 
 
 python eval_bm25_retrieval.py --eval_file_path=$eval_file_path \
---eval_field_name="oracle_rewrite" \
+--eval_field_name="t5_rewrite" \
 --index_path=$index_path \
 --qrel_file_path=$qrel_file_path \
 --top_n=1000 \
